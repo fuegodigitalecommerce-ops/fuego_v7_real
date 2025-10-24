@@ -40,8 +40,9 @@ export default async function handler(req, res) {
     // ======================================
     // 3️⃣ GOOGLE IMAGES (Custom Search API)
     // ======================================
-    const API_KEY = "TU_API_KEY_AQUI"; // ← Reemplaza aquí tu API KEY
-    const CX_ID = "TU_CX_ID_AQUI"; // ← Reemplaza aquí tu CX ID
+    const API_KEY = "AIzaSyCguPds0Dy0_Z6qnEWaq0NXrbHRwGgstG0";
+    const CX_ID = "55f45c50ecad74dfe";
+
 
     const imageSearchURL = `https://customsearch.googleapis.com/customsearch/v1?q=${encodeURIComponent(
       keyword
