@@ -1,0 +1,11 @@
+{
+  "name": "fuego-latam",
+  "version": "1.0.0",
+  "description": "FUEGO ❤️‍🔥 Ecosistema digital para detectar y vender productos en tendencia en Latinoamérica.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "vercel dev"
+  },
+  "dependencies": {}
+}
