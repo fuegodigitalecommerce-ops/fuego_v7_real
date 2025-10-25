@@ -1,8 +1,8 @@
 // api/trends.js
 import fetch from "node-fetch";
 
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || "REPLACE_WITH_YOUR_GOOGLE_KEY";
-const GOOGLE_CX = process.env.GOOGLE_CX || "REPLACE_WITH_YOUR_CX";
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || "AIzaSyCguPds0Dy0_Z6qnEWaq0NXrbHRwGgstG0";
+const GOOGLE_CX = process.env.GOOGLE_CX || "55f45c50ecad74dfe";
 
 // Helper: detect country from Vercel header or fallback to ipapi
 async function detectCountry(req){
