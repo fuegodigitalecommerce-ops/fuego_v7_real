@@ -1,8 +1,29 @@
 {
   "name": "fuego-v7-real",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "API y ecosistema digital FUEGO ❤️‍🔥 para análisis y tendencias de e-commerce en LATAM.",
+  "main": "api/trends.js",
   "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "node api/trends.js"
+  },
   "dependencies": {
-  "node-fetch": "3.3.2"
+    "node-fetch": "^3.3.2",
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "fuego",
+    "ecommerce",
+    "google-trends",
+    "mercadolibre",
+    "latam",
+    "ai"
+  ],
+  "author": "Equipo FUEGO LATAM",
+  "license": "MIT"
 }
