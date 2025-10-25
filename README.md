@@ -1,8 +1,5 @@
-# 🔥 FUEGO LATAM (Modo Real)
+# 🔥 FUEGO LATAM
 
-API pública experimental que combina:
-- **Google Trends:** palabras en tendencia en tiempo real.
-- **Mercado Libre:** productos reales en tendencia.
-- **Google Imágenes:** resultados visuales relacionados.
+API experimental para descubrir **productos y temas en tendencia** en tiempo real en Latinoamérica.
 
-## 🌎 Endpoint
+### Endpoint principal
