@@ -5,27 +5,32 @@ export default async function handler(req, res) {
   try {
     const { keyword = "navidad", country = "CO" } = req.query;
 
-    // API de Google Custom Search
     const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
     const GOOGLE_CX = process.env.GOOGLE_CX;
+
+    if (!GOOGLE_API_KEY || !GOOGLE_CX) {
+      return res.status(500).json({
+        ok: false,
+        error: "Faltan claves de Google",
+      });
+    }
 
     const searchUrl = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(
       keyword
     )}+productos&cx=${GOOGLE_CX}&key=${GOOGLE_API_KEY}`;
 
-    const googleRes = await fetch(searchUrl);
-    const googleData = await googleRes.json();
+    const response = await fetch(searchUrl);
+    const data = await response.json();
 
-    if (!googleData.items) {
+    if (!data.items) {
       return res.status(200).json({
         ok: false,
-        error: "No se encontraron resultados en Google.",
+        error: "Sin resultados en Google",
       });
     }
 
-    // Armar respuesta
-    const results = googleData.items.slice(0, 10).map((item, index) => ({
-      id: index + 1,
+    const results = data.items.slice(0, 10).map((item, i) => ({
+      id: i + 1,
       title: item.title,
       link: item.link,
       snippet: item.snippet,
@@ -39,11 +44,11 @@ export default async function handler(req, res) {
       resultsCount: results.length,
       results,
     });
-  } catch (error) {
+  } catch (err) {
     return res.status(500).json({
       ok: false,
-      error: "Error en el servidor",
-      detalle: error.message,
+      error: "Error en servidor",
+      detalle: err.message,
     });
   }
 }
