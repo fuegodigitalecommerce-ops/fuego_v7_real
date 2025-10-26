@@ -1,7 +1,8 @@
 {
   "name": "fuego_v7_real",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "API real de FUEGO con Google Custom Search",
+  "main": "api/trends.js",
   "type": "module",
   "dependencies": {
     "node-fetch": "^3.3.2"
