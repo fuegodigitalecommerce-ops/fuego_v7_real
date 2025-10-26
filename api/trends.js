@@ -1,60 +1,53 @@
+// /api/trends.js
 export default async function handler(req, res) {
+  const { keyword = "navidad", country = "CO" } = req.query;
+
   try {
-    const { keyword = "navidad", country = "CO" } = req.query;
+    // Buscar productos en Google (Custom Search API)
+    const googleUrl = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(
+      keyword
+    )}&cx=${process.env.GOOGLE_SEARCH_ENGINE_ID}&key=${process.env.GOOGLE_API_KEY}&searchType=image`;
 
-    const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
-    const GOOGLE_CSE_ID = process.env.GOOGLE_CSE_ID;
+    const googleRes = await fetch(googleUrl);
+    const googleData = await googleRes.json();
 
-    // Si no hay claves, detener
-    if (!GOOGLE_API_KEY || !GOOGLE_CSE_ID) {
-      return res.status(500).json({
-        ok: false,
-        error: "Faltan claves de API",
-        detalle: "Configura GOOGLE_API_KEY y GOOGLE_CSE_ID en las variables de entorno",
-      });
-    }
-
-    // --- 1️⃣ Buscar imágenes y productos en Google Custom Search
-    const searchUrl = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(
-      keyword + " site:mercadolibre.com " + country
-    )}&cx=${GOOGLE_CSE_ID}&key=${GOOGLE_API_KEY}&num=10&searchType=image`;
-
-    const resp = await fetch(searchUrl);
-    const googleData = await resp.json();
-
-    if (!googleData.items) {
-      return res.status(200).json({
-        ok: true,
-        keyword,
-        country,
-        results: [],
-        detalle: "Sin resultados desde Google",
-      });
-    }
-
-    // --- 2️⃣ Estructurar resultados
-    const results = googleData.items.map((item, index) => ({
-      id: index + 1,
-      title: item.title || "Producto en tendencia",
+    const googleResults = (googleData.items || []).slice(0, 10).map((item) => ({
+      title: item.title,
       link: item.image?.contextLink || item.link,
-      image: item.link || item.image?.thumbnailLink,
-      source: item.displayLink || "Google Shopping",
+      image: item.link,
+      source: "Google",
     }));
 
-    // --- 3️⃣ Enviar respuesta final
-    return res.status(200).json({
+    // Buscar productos en Mercado Libre
+    const mlUrl = `https://api.mercadolibre.com/sites/ML${country}/search?q=${encodeURIComponent(
+      keyword
+    )}`;
+    const mlRes = await fetch(mlUrl);
+    const mlData = await mlRes.json();
+
+    const mlResults = (mlData.results || []).slice(0, 10).map((item) => ({
+      title: item.title,
+      link: item.permalink,
+      image: item.thumbnail,
+      source: "Mercado Libre",
+      price: item.price,
+      seller: item.seller?.nickname || "Desconocido",
+    }));
+
+    const results = [...googleResults, ...mlResults];
+
+    res.status(200).json({
       ok: true,
       keyword,
       country,
       resultsCount: results.length,
       results,
     });
-  } catch (error) {
-    console.error("Error en trends.js:", error);
-    return res.status(500).json({
+  } catch (err) {
+    res.status(500).json({
       ok: false,
-      error: "Error interno del servidor",
-      detalle: error.message,
+      error: "Error al obtener datos reales",
+      detalle: err.message,
     });
   }
 }
