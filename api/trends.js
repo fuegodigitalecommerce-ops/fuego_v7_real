@@ -1,52 +1,57 @@
-// /api/trends.js
+import fetch from "node-fetch";
+
 export default async function handler(req, res) {
   const { keyword = "navidad", country = "CO" } = req.query;
 
   try {
-    // Buscar productos en Google (Custom Search API)
-    const googleUrl = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(
-      keyword
-    )}&cx=${process.env.GOOGLE_SEARCH_ENGINE_ID}&key=${process.env.GOOGLE_API_KEY}&searchType=image`;
+    // --- 🔥 1. Google Custom Search (Imágenes)
+    const googleKey = process.env.GOOGLE_API_KEY;
+    const googleCx = process.env.GOOGLE_CX_ID;
 
-    const googleRes = await fetch(googleUrl);
+    const googleURL = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(
+      keyword
+    )}+${country}&cx=${googleCx}&key=${googleKey}&searchType=image&num=5`;
+
+    const googleRes = await fetch(googleURL);
     const googleData = await googleRes.json();
 
-    const googleResults = (googleData.items || []).slice(0, 10).map((item) => ({
-      title: item.title,
-      link: item.image?.contextLink || item.link,
-      image: item.link,
-      source: "Google",
-    }));
-
-    // Buscar productos en Mercado Libre
-    const mlUrl = `https://api.mercadolibre.com/sites/ML${country}/search?q=${encodeURIComponent(
+    // --- 🛍️ 2. Mercado Libre (Productos)
+    const mlURL = `https://api.mercadolibre.com/sites/ML${country}/search?q=${encodeURIComponent(
       keyword
     )}`;
-    const mlRes = await fetch(mlUrl);
+    const mlRes = await fetch(mlURL);
     const mlData = await mlRes.json();
 
-    const mlResults = (mlData.results || []).slice(0, 10).map((item) => ({
-      title: item.title,
-      link: item.permalink,
-      image: item.thumbnail,
-      source: "Mercado Libre",
-      price: item.price,
-      seller: item.seller?.nickname || "Desconocido",
+    const googleResults = (googleData.items || []).map((img, i) => ({
+      id: i + 1,
+      title: img.title,
+      image: img.link,
+      link: img.image?.contextLink || img.link,
+      source: "Google Images",
     }));
 
-    const results = [...googleResults, ...mlResults];
+    const mlResults = (mlData.results || []).slice(0, 10).map((p) => ({
+      id: p.id,
+      title: p.title,
+      image: p.thumbnail,
+      link: p.permalink,
+      price: p.price,
+      source: "Mercado Libre",
+    }));
+
+    const allResults = [...mlResults, ...googleResults];
 
     res.status(200).json({
       ok: true,
       keyword,
       country,
-      resultsCount: results.length,
-      results,
+      resultsCount: allResults.length,
+      results: allResults,
     });
   } catch (err) {
     res.status(500).json({
       ok: false,
-      error: "Error al obtener datos reales",
+      error: "Error al obtener datos",
       detalle: err.message,
     });
   }
