@@ -5,17 +5,24 @@ export default async function handler(req, res) {
   const apiKey = process.env.GOOGLE_API_KEY;
   const cx = process.env.GOOGLE_CX;
 
+  if (!apiKey || !cx) {
+    return res.status(500).json({
+      ok: false,
+      error: "Faltan claves de API",
+      detalle: "Debes configurar GOOGLE_API_KEY y GOOGLE_CX en Vercel"
+    });
+  }
+
   try {
-    // Llamada a la API de Google Custom Search
-    const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(keyword)}&num=10`;
+    const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(keyword)} ${country}&num=10`;
     const response = await fetch(url);
     const data = await response.json();
 
     if (!data.items) {
       return res.status(200).json({
         ok: false,
-        error: "Sin resultados o error en Google API",
-        detalle: data.error || "Verifica tu API Key y CX"
+        error: "Sin resultados de Google",
+        detalle: data.error || "Verifica tu API Key o CX"
       });
     }
 
@@ -24,7 +31,7 @@ export default async function handler(req, res) {
       title: item.title,
       link: item.link,
       snippet: item.snippet,
-      source: "Google Search"
+      source: "Google"
     }));
 
     res.status(200).json({
