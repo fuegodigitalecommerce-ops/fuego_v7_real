@@ -1,5 +1,12 @@
-# 🔥 FUEGO LATAM
+# 🔥 FUEGO API REAL LATAM V7
 
-API experimental para descubrir **productos y temas en tendencia** en tiempo real en Latinoamérica.
+API inteligente que combina datos en tiempo real de:
 
-### Endpoint principal
+- **Google Images** (vía Custom Search API)
+- **Mercado Libre** (productos por país)
+- **Google Trends** (temas populares y búsqueda visual)
+
+## 🌎 Endpoints
+
+### 1️⃣ `/api/trends`
+Ejemplo:
