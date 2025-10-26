@@ -1,82 +1,60 @@
-import fetch from "node-fetch";
-
 export default async function handler(req, res) {
-  const { keyword = "", country = "CO" } = req.query;
-
-  if (!keyword) {
-    return res.status(400).json({ ok: false, error: "Falta palabra clave" });
-  }
-
   try {
-    const results = [];
+    const { keyword = "navidad", country = "CO" } = req.query;
 
-    // === GOOGLE CUSTOM SEARCH ===
-    const googleKey = process.env.GOOGLE_API_KEY;
-    const googleCx = process.env.GOOGLE_CX;
+    const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+    const GOOGLE_CSE_ID = process.env.GOOGLE_CSE_ID;
 
-    const googleUrl = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(
-      keyword
-    )}+${country}&cx=${googleCx}&key=${googleKey}&searchType=image&num=10`;
-
-    const googleRes = await fetch(googleUrl);
-    const googleData = await googleRes.json();
-
-    if (googleData.items) {
-      googleData.items.forEach((item, idx) => {
-        results.push({
-          id: `G${idx + 1}`,
-          title: item.title,
-          link: item.link,
-          image: item.image?.thumbnailLink || item.link,
-          source: "Google Images",
-        });
+    // Si no hay claves, detener
+    if (!GOOGLE_API_KEY || !GOOGLE_CSE_ID) {
+      return res.status(500).json({
+        ok: false,
+        error: "Faltan claves de API",
+        detalle: "Configura GOOGLE_API_KEY y GOOGLE_CSE_ID en las variables de entorno",
       });
     }
 
-    // === MERCADO LIBRE ===
-    const meliUrl = `${process.env.MELI_API_URL}/${country}/search?q=${encodeURIComponent(
-      keyword
-    )}`;
-    const meliRes = await fetch(meliUrl);
-    const meliData = await meliRes.json();
+    // --- 1️⃣ Buscar imágenes y productos en Google Custom Search
+    const searchUrl = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(
+      keyword + " site:mercadolibre.com " + country
+    )}&cx=${GOOGLE_CSE_ID}&key=${GOOGLE_API_KEY}&num=10&searchType=image`;
 
-    if (meliData.results) {
-      meliData.results.slice(0, 10).forEach((p, idx) => {
-        results.push({
-          id: `M${idx + 1}`,
-          title: p.title,
-          price: p.price,
-          link: p.permalink,
-          image: p.thumbnail,
-          source: "Mercado Libre",
-          seller: p.seller?.nickname || "Proveedor no identificado",
-        });
-      });
-    }
+    const resp = await fetch(searchUrl);
+    const googleData = await resp.json();
 
-    if (results.length === 0) {
-      return res.json({
+    if (!googleData.items) {
+      return res.status(200).json({
         ok: true,
         keyword,
         country,
-        resultsCount: 0,
         results: [],
-        message: "Sin resultados reales",
+        detalle: "Sin resultados desde Google",
       });
     }
 
-    res.status(200).json({
+    // --- 2️⃣ Estructurar resultados
+    const results = googleData.items.map((item, index) => ({
+      id: index + 1,
+      title: item.title || "Producto en tendencia",
+      link: item.image?.contextLink || item.link,
+      image: item.link || item.image?.thumbnailLink,
+      source: item.displayLink || "Google Shopping",
+    }));
+
+    // --- 3️⃣ Enviar respuesta final
+    return res.status(200).json({
       ok: true,
       keyword,
       country,
       resultsCount: results.length,
       results,
     });
-  } catch (err) {
-    res.status(500).json({
+  } catch (error) {
+    console.error("Error en trends.js:", error);
+    return res.status(500).json({
       ok: false,
-      error: err.message,
-      detalle: "Error en la conexión con APIs externas",
+      error: "Error interno del servidor",
+      detalle: error.message,
     });
   }
 }
