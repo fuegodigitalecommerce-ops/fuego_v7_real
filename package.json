@@ -1,6 +1,7 @@
 {
-  "name": "fuego-v7-real",
+  "name": "fuego_v7_real",
   "version": "1.0.0",
+  "main": "index.js",
   "type": "module",
   "dependencies": {
     "node-fetch": "^3.3.2"
