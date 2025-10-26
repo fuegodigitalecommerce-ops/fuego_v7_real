@@ -1,4 +1,3 @@
-// /pages/index.js
 import { useState } from "react";
 
 export default function Home() {
@@ -6,121 +5,106 @@ export default function Home() {
   const [country, setCountry] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const buscar = async () => {
-    if (!keyword || !country) return alert("Por favor escribe una palabra y selecciona un país 🔥");
+  const fetchTrends = async () => {
     setLoading(true);
+    setError(null);
     setResults([]);
+
     try {
-      const response = await fetch(`/api/trends?keyword=${encodeURIComponent(keyword)}&country=${country}`);
-      const data = await response.json();
-      if (data.ok && data.results.length > 0) {
-        setResults(data.results);
-      } else {
-        alert("No se encontraron resultados 🔎");
-      }
+      const res = await fetch(`/api/trends?keyword=${keyword}&country=${country}`);
+      const data = await res.json();
+
+      if (!data.ok) throw new Error(data.error || "Error al obtener resultados");
+      setResults(data.results || []);
     } catch (err) {
-      alert("Error al obtener datos 😥");
+      console.error("Error al cargar tendencias:", err);
+      setError("No se pudieron cargar las tendencias 😔");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div style={{ background: "#000", color: "#fff", minHeight: "100vh", textAlign: "center", padding: "40px" }}>
-      <h1 style={{ fontSize: "2.5rem", marginBottom: "10px" }}>🔥 FUEGO LATAM 🔥</h1>
-      <p style={{ fontSize: "1.1rem", marginBottom: "25px" }}>
-        Descubre los productos en tendencia en tu país
-      </p>
+    <div style={{
+      backgroundColor: "#000",
+      color: "#fff",
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center"
+    }}>
+      <h1>🔥 FUEGO LATAM 🔥</h1>
+      <p>Descubre los productos en tendencia en tu país</p>
 
-      <div style={{ display: "flex", justifyContent: "center", gap: "10px", flexWrap: "wrap", marginBottom: "25px" }}>
+      <div style={{ display: "flex", gap: "10px", margin: "20px" }}>
         <input
-          type="text"
-          placeholder="Ej: navidad, moda, hogar..."
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
-          style={{
-            padding: "10px",
-            borderRadius: "6px",
-            border: "none",
-            width: "220px",
-            outline: "none"
-          }}
+          placeholder="Ej: navidad, moda..."
+          style={{ padding: "10px", borderRadius: "5px", width: "220px" }}
         />
 
         <select
           value={country}
           onChange={(e) => setCountry(e.target.value)}
-          style={{
-            padding: "10px",
-            borderRadius: "6px",
-            border: "none",
-            width: "120px",
-            outline: "none"
-          }}
+          style={{ padding: "10px", borderRadius: "5px" }}
         >
           <option value="">Seleccionar país</option>
-          <option value="AR">Argentina</option>
-          <option value="BO">Bolivia</option>
-          <option value="BR">Brasil</option>
-          <option value="CL">Chile</option>
-          <option value="CO">Colombia</option>
-          <option value="CR">Costa Rica</option>
-          <option value="CU">Cuba</option>
-          <option value="DO">Rep. Dominicana</option>
-          <option value="EC">Ecuador</option>
-          <option value="MX">México</option>
-          <option value="PA">Panamá</option>
-          <option value="PE">Perú</option>
-          <option value="PY">Paraguay</option>
-          <option value="UY">Uruguay</option>
-          <option value="VE">Venezuela</option>
+          <option value="CO">Colombia 🇨🇴</option>
+          <option value="MX">México 🇲🇽</option>
+          <option value="AR">Argentina 🇦🇷</option>
+          <option value="CL">Chile 🇨🇱</option>
+          <option value="PE">Perú 🇵🇪</option>
+          <option value="EC">Ecuador 🇪🇨</option>
+          <option value="VE">Venezuela 🇻🇪</option>
+          <option value="PA">Panamá 🇵🇦</option>
+          <option value="DO">Rep. Dominicana 🇩🇴</option>
         </select>
 
         <button
-          onClick={buscar}
+          onClick={fetchTrends}
           style={{
-            background: "#ff1c1c",
+            padding: "10px 20px",
+            backgroundColor: "red",
             color: "#fff",
             border: "none",
-            padding: "10px 20px",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontWeight: "bold"
+            borderRadius: "5px",
+            cursor: "pointer"
           }}
         >
-          {loading ? "Buscando..." : "Encender FUEGO"}
+          Encender FUEGO
         </button>
       </div>
 
-      {results.length > 0 && (
-        <div>
-          <h2 style={{ marginBottom: "20px" }}>🔥 Tendencias que están rompiendo en {country} 🔥</h2>
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-            gap: "20px",
-            padding: "20px"
-          }}>
-            {results.map((item) => (
-              <div key={item.id} style={{
-                background: "#111",
-                borderRadius: "10px",
-                padding: "15px",
-                textAlign: "left",
-                boxShadow: "0 0 10px rgba(255,255,255,0.1)"
-              }}>
-                <h3 style={{ color: "#ffcc00" }}>{item.title}</h3>
-                <p style={{ color: "#ccc", fontSize: "0.9rem" }}>{item.snippet}</p>
-                <a href={item.link} target="_blank" rel="noopener noreferrer" style={{ color: "#1e90ff" }}>
+      {loading && <p>🔥 Buscando tendencias...</p>}
+      {error && <p>{error}</p>}
+
+      <div style={{ marginTop: "20px", maxWidth: "600px", textAlign: "center" }}>
+        {results.length > 0 ? (
+          results.map((item, i) => (
+            <div key={i} style={{
+              backgroundColor: "#222",
+              borderRadius: "8px",
+              margin: "10px 0",
+              padding: "10px"
+            }}>
+              <h3>{item.title}</h3>
+              {item.link && (
+                <a href={item.link} target="_blank" rel="noopener noreferrer" style={{ color: "#0af" }}>
                   Ver más 🔗
                 </a>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+              )}
+            </div>
+          ))
+        ) : (
+          !loading && <p>No hay resultados todavía 🔍</p>
+        )}
+      </div>
 
-      <footer style={{ marginTop: "30px", fontSize: "0.9rem", color: "#aaa" }}>
+      <footer style={{ marginTop: "30px", fontSize: "14px", color: "#aaa" }}>
         Hecho con 🔥 por el equipo FUEGO © 2025
       </footer>
     </div>
