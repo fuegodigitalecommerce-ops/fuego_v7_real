@@ -1,8 +1,11 @@
 {
-  "name": "fuego_v7_real",
+  "name": "fuego-v7-real",
   "version": "1.0.0",
+  "description": "🔥 API y web de tendencias LATAM",
   "main": "index.js",
-  "type": "module",
+  "scripts": {
+    "start": "node api/trends.js"
+  },
   "dependencies": {
     "node-fetch": "^3.3.2"
   }
