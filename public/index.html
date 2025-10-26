@@ -1,95 +1,197 @@
-<!DOCTYPE html>
-<html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🔥 FUEGO LATAM 🔥</title>
-    <style>
-      body {
-        background-color: #111;
-        color: #fff;
-        font-family: Arial, sans-serif;
-        text-align: center;
-        padding: 40px;
-      }
-      h1 {
-        font-size: 2em;
-        margin-bottom: 10px;
-      }
-      input, select {
-        padding: 10px;
-        margin: 10px;
-        border-radius: 8px;
-        border: none;
-        font-size: 16px;
-      }
-      button {
-        background-color: red;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        cursor: pointer;
-      }
-      .results {
-        margin-top: 30px;
-      }
-      .result-item {
-        background: #222;
-        padding: 10px;
-        border-radius: 8px;
-        margin: 6px auto;
-        width: fit-content;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>🔥 FUEGO LATAM 🔥</h1>
-    <p>Descubre los productos en tendencia en tu país</p>
+import { useState } from "react";
 
-    <input type="text" id="keyword" placeholder="Ej: navidad, moda, hogar..." />
-    <select id="country">
-      <option value="">Selecciona tu país</option>
-      <option value="CO">🇨🇴 Colombia</option>
-      <option value="MX">🇲🇽 México</option>
-      <option value="AR">🇦🇷 Argentina</option>
-      <option value="CL">🇨🇱 Chile</option>
-      <option value="PE">🇵🇪 Perú</option>
-    </select>
-    <button onclick="searchTrends()">Encender FUEGO</button>
+export default function Home() {
+  const [keyword, setKeyword] = useState("");
+  const [country, setCountry] = useState("CO");
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-    <div class="results" id="results"></div>
+  const handleSearch = async () => {
+    if (!keyword.trim()) return alert("🔥 Escribe una palabra clave primero!");
+    setLoading(true);
+    setError("");
+    setResults([]);
 
-    <p>Hecho con 🔥 por el equipo FUEGO © 2025</p>
+    try {
+      const res = await fetch(`/api/trends?keyword=${keyword}&country=${country}`);
+      const data = await res.json();
+      if (data.ok && data.results?.length > 0) {
+        setResults(data.results);
+      } else {
+        setError("No se encontraron resultados 🔍");
+      }
+    } catch (e) {
+      setError("Error al conectar con el servidor 😢");
+    }
+    setLoading(false);
+  };
 
-    <script>
-      async function searchTrends() {
-        const keyword = document.getElementById("keyword").value;
-        const country = document.getElementById("country").value || "CO";
+  return (
+    <div className="container">
+      <h1>🔥 FUEGO LATAM 🔥</h1>
+      <p>Descubre los productos en tendencia en tu país</p>
 
-        if (!keyword) {
-          alert("Por favor, escribe una palabra clave.");
-          return;
+      <div className="inputs">
+        <input
+          type="text"
+          placeholder="Ej: navidad, moda, hogar..."
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+        />
+        <select value={country} onChange={(e) => setCountry(e.target.value)}>
+          <option value="">Seleccionar país</option>
+          <option value="CO">🇨🇴 Colombia</option>
+          <option value="MX">🇲🇽 México</option>
+          <option value="AR">🇦🇷 Argentina</option>
+          <option value="CL">🇨🇱 Chile</option>
+          <option value="PE">🇵🇪 Perú</option>
+          <option value="EC">🇪🇨 Ecuador</option>
+          <option value="US">🇺🇸 Estados Unidos</option>
+          <option value="ES">🇪🇸 España</option>
+        </select>
+        <button onClick={handleSearch}>Encender FUEGO</button>
+      </div>
+
+      {loading && <p>🔥 Buscando tendencias...</p>}
+      {error && <p className="error">{error}</p>}
+
+      <div className="results">
+        {results.map((item, i) => (
+          <div key={i} className="result-item">
+            <a href={item.link || "#"} target="_blank" rel="noopener noreferrer">
+              <h3>{item.title}</h3>
+              {item.image && <img src={item.image} alt={item.title} />}
+              {item.source && <p>🛍️ {item.source}</p>}
+            </a>
+          </div>
+        ))}
+      </div>
+
+      <footer>
+        Hecho con 🔥 por el equipo <strong>FUEGO</strong> © 2025
+      </footer>
+
+      {/* 🎨 Estilos CSS */}
+      <style jsx>{`
+        body {
+          margin: 0;
+          font-family: "Poppins", sans-serif;
+          background-color: #000;
+          color: #fff;
+          text-align: center;
         }
 
-        const res = await fetch(`/api/trends?keyword=${keyword}&country=${country}`);
-        const data = await res.json();
-
-        const container = document.getElementById("results");
-        container.innerHTML = "";
-
-        if (!data.ok || data.results.length === 0) {
-          container.innerHTML = "<p>No se encontraron resultados 🔎</p>";
-          return;
+        .container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
         }
 
-        data.results.forEach(r => {
-          const div = document.createElement("div");
-          div.className = "result-item";
-          div.textContent = r.title;
-          container.appendChild(div);
-        });
-      }
-    </script>
-  </body>
-</html>
+        h1 {
+          font-size: 2.4rem;
+          margin-bottom: 10px;
+        }
+
+        .inputs {
+          display: flex;
+          gap: 10px;
+          margin: 20px 0;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+
+        input,
+        select {
+          padding: 10px 15px;
+          border-radius: 6px;
+          border: none;
+          outline: none;
+          font-size: 1rem;
+        }
+
+        button {
+          background: red;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          padding: 10px 15px;
+          font-weight: bold;
+          cursor: pointer;
+          transition: 0.3s;
+        }
+
+        button:hover {
+          background: #ff3333;
+        }
+
+        .error {
+          color: #ff6b6b;
+          font-weight: bold;
+          margin-top: 10px;
+        }
+
+        .results {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 15px;
+          padding: 20px;
+          max-width: 900px;
+          width: 100%;
+        }
+
+        .result-item {
+          background: #111;
+          padding: 15px;
+          border-radius: 10px;
+          transition: transform 0.2s;
+        }
+
+        .result-item:hover {
+          transform: scale(1.03);
+        }
+
+        .result-item h3 {
+          color: #fff;
+          font-size: 1rem;
+          margin: 0 0 8px;
+        }
+
+        .result-item img {
+          max-width: 150px;
+          display: block;
+          margin: 5px auto;
+          border-radius: 8px;
+        }
+
+        .result-item a {
+          color: white;
+          text-decoration: none;
+        }
+
+        .result-item a:hover {
+          opacity: 0.8;
+        }
+
+        footer {
+          margin-top: 30px;
+          color: #ccc;
+        }
+
+        @media (max-width: 600px) {
+          .inputs {
+            flex-direction: column;
+          }
+
+          input,
+          select,
+          button {
+            width: 90%;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
