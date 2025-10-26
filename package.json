@@ -1,8 +1,8 @@
 {
   "name": "fuego-v7-real",
   "version": "1.0.0",
-  "description": "🔥 API y web de tendencias LATAM",
-  "main": "index.js",
+  "description": "🔥 FUEGO LATAM - Buscador de tendencias en tiempo real",
+  "main": "api/trends.js",
   "scripts": {
     "start": "node api/trends.js"
   },
