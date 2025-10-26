@@ -1,51 +1,82 @@
-// /api/trends.js
+import fetch from "node-fetch";
+
 export default async function handler(req, res) {
-  const { keyword = "tendencias", country = "CO" } = req.query;
+  const { keyword = "", country = "CO" } = req.query;
 
-  const apiKey = process.env.GOOGLE_API_KEY;
-  const cx = process.env.GOOGLE_CX;
-
-  if (!apiKey || !cx) {
-    return res.status(500).json({
-      ok: false,
-      error: "Faltan claves de API",
-      detalle: "Debes configurar GOOGLE_API_KEY y GOOGLE_CX en Vercel"
-    });
+  if (!keyword) {
+    return res.status(400).json({ ok: false, error: "Falta palabra clave" });
   }
 
   try {
-    const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(keyword)} ${country}&num=10`;
-    const response = await fetch(url);
-    const data = await response.json();
+    const results = [];
 
-    if (!data.items) {
-      return res.status(200).json({
-        ok: false,
-        error: "Sin resultados de Google",
-        detalle: data.error || "Verifica tu API Key o CX"
+    // === GOOGLE CUSTOM SEARCH ===
+    const googleKey = process.env.GOOGLE_API_KEY;
+    const googleCx = process.env.GOOGLE_CX;
+
+    const googleUrl = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(
+      keyword
+    )}+${country}&cx=${googleCx}&key=${googleKey}&searchType=image&num=10`;
+
+    const googleRes = await fetch(googleUrl);
+    const googleData = await googleRes.json();
+
+    if (googleData.items) {
+      googleData.items.forEach((item, idx) => {
+        results.push({
+          id: `G${idx + 1}`,
+          title: item.title,
+          link: item.link,
+          image: item.image?.thumbnailLink || item.link,
+          source: "Google Images",
+        });
       });
     }
 
-    const results = data.items.map((item, i) => ({
-      id: i + 1,
-      title: item.title,
-      link: item.link,
-      snippet: item.snippet,
-      source: "Google"
-    }));
+    // === MERCADO LIBRE ===
+    const meliUrl = `${process.env.MELI_API_URL}/${country}/search?q=${encodeURIComponent(
+      keyword
+    )}`;
+    const meliRes = await fetch(meliUrl);
+    const meliData = await meliRes.json();
+
+    if (meliData.results) {
+      meliData.results.slice(0, 10).forEach((p, idx) => {
+        results.push({
+          id: `M${idx + 1}`,
+          title: p.title,
+          price: p.price,
+          link: p.permalink,
+          image: p.thumbnail,
+          source: "Mercado Libre",
+          seller: p.seller?.nickname || "Proveedor no identificado",
+        });
+      });
+    }
+
+    if (results.length === 0) {
+      return res.json({
+        ok: true,
+        keyword,
+        country,
+        resultsCount: 0,
+        results: [],
+        message: "Sin resultados reales",
+      });
+    }
 
     res.status(200).json({
       ok: true,
       keyword,
       country,
       resultsCount: results.length,
-      results
+      results,
     });
-  } catch (error) {
+  } catch (err) {
     res.status(500).json({
       ok: false,
-      error: "Error al obtener datos de Google",
-      detalle: error.message
+      error: err.message,
+      detalle: "Error en la conexión con APIs externas",
     });
   }
 }
